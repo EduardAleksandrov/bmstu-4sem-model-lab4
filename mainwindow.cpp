@@ -43,7 +43,12 @@ void MainWindow::on_pushButton_clicked()
 //    qDebug() << generator.generate() << " "<< gen.generate();
     ui->textBrowser->setText(QString::number(result_step));
 
+    result_step = eventModel(generator, processor, count_tasks, repeat_probability);
+    ui->textBrowser_2->setText(QString::number(result_step));
+
 }
+
+
 int MainWindow::stepModel(EvenDistribution& generator, ErlangDistribution& processor, int countTasks, int repeatProbability, double step)
 {
     int tasksDone = 0;
@@ -109,7 +114,76 @@ int MainWindow::randf()
     return min + rand() % (max - min + 1);
 }
 
+int MainWindow::eventModel(EvenDistribution& generator, ErlangDistribution& processor, int countTasks, int repeatProbability)
+{
+    int tasksDone = 0;
+    int curQueueLen = 0;
+    int maxQueueLen = 0;
+    bool free = true;
+    bool processFlag = false;
+    QVector<eventStruct*> events;
+    events.push_back(new eventStruct(generator.generate(),"g"));
+    while(tasksDone < countTasks)
+    {
+        eventStruct event = *events[0];
+        events.erase(events.begin());
+        //генератор
+        if(event.type == "g")
+        {
+            curQueueLen += 1;
+            if(curQueueLen > maxQueueLen)
+            {
+                maxQueueLen = curQueueLen;
+            }
+            addEvent(events, eventStruct(event.data+generator.generate(), "g"));
+            if(free)
+            {
+                processFlag = true;
+            }
+        //обработчик
+        } else if(event.type == "p") {
+            tasksDone += 1;
+            if(randf() <= repeatProbability)
+            {
+                curQueueLen += 1;
+            }
+            processFlag = true;
+        }
+        if(processFlag)
+        {
+            if(curQueueLen > 0)
+            {
+                curQueueLen -= 1;
+                addEvent(events, eventStruct(event.data+processor.generate(), "p"));
+                free = false;
+            } else {
+                free = true;
+            }
+            processFlag = false;
+        }
+    }
+    return maxQueueLen;
+}
 
+void MainWindow::addEvent(QVector<eventStruct*>& events, eventStruct event)
+{
+    int i = 0;
+    eventStruct* ev = new eventStruct(event.data,event.type);
+    while(i < events.size() && events[i]->data < event.data)
+    {
+        i += 1;
+    }
+
+    if(i > 0 && i < events.size())
+    {
+//        *events[i-1] = event;
+        delete events[i-1];
+        events[i-1] = nullptr;
+        events[i-1] = ev;
+    } else {
+        events.push_back(ev);
+    }
+}
 
 void MainWindow::getDataFromScreen(int&a, int&b, int&k, double&lambda, int&count_tasks, int&repeat_probability, double&step_t)
 {
@@ -124,22 +198,22 @@ void MainWindow::getDataFromScreen(int&a, int&b, int&k, double&lambda, int&count
     if(a_entry == "" || b_entry == "")
     {
 //        ui->textBrowser_3->setText("Введите диапазон");
-        throw EntryException{"Введите диапазон"};
+        throw EntryException{"Введите диапазон a b"};
     }
     if(a == b)
     {
 //        ui->textBrowser_3->setText("Введите диапазон");
-        throw EntryException{"Введите диапазон"};
+        throw EntryException{"Введите диапазон a b"};
     }
     if(a > b)
     {
 //        ui->textBrowser_3->setText("Введите диапазон правильно");
-        throw EntryException{"Введите диапазон правильно"};
+        throw EntryException{"Введите диапазон a b правильно"};
     }
     if(b - a < 0.01)
     {
 //        ui->textBrowser_3->setText("Диапазон слишком мал");
-        throw EntryException{"Диапазон слишком мал"};
+        throw EntryException{"Диапазон a b слишком мал"};
     }
 //enter k, lambda
     QString k_entry = ui->lineEdit_3->text();
@@ -179,3 +253,19 @@ void MainWindow::getDataFromScreen(int&a, int&b, int&k, double&lambda, int&count
         throw EntryException{"Неверно задан шаг времени"};
     }
 }
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    ui->lineEdit->clear();
+    ui->lineEdit_2->clear();
+    ui->lineEdit_3->clear();
+    ui->lineEdit_4->clear();
+    ui->lineEdit_5->clear();
+    ui->lineEdit_6->clear();
+    ui->lineEdit_7->clear();
+
+    ui->textBrowser->clear();
+    ui->textBrowser_2->clear();
+    ui->textBrowser_3->clear();
+}
+
