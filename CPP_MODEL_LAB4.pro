@@ -19,6 +19,7 @@ HEADERS += \
     entryexception.h \
     erlangdistribution.h \
     evendistribution.h \
+    eventStruct.h \
     mainwindow.h
 
 FORMS += \

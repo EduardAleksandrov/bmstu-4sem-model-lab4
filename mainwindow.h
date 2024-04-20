@@ -5,17 +5,11 @@
 
 #include "evendistribution.h"
 #include "erlangdistribution.h"
+#include "eventStruct.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
-
-struct eventStruct
-{
-    double data;
-    QString type;
-    eventStruct(double d, QString t): data{d}, type{t}{}
-};
 
 class MainWindow : public QMainWindow
 {
