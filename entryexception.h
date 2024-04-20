@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-class EntryException
+class EntryException: public std::exception
 {
 public:
     EntryException(QString text);
