@@ -10,11 +10,15 @@ CONFIG += c++11
 
 SOURCES += \
     entryexception.cpp \
+    erlangdistribution.cpp \
+    evendistribution.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     entryexception.h \
+    erlangdistribution.h \
+    evendistribution.h \
     mainwindow.h
 
 FORMS += \

@@ -5,6 +5,7 @@
 #include <cmath>
 #include "entryexception.h"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -25,6 +26,8 @@ void MainWindow::on_pushButton_clicked()
     int count_tasks{0}, repeat_probability{0};
     double step_t {0.0};
 
+    srand(time(NULL)); //пишем 1 раз до циклов, чтобы рассчитывалось каждый раз разное число
+
     try
     {
         getDataFromScreen(a,b,k,lambda,count_tasks,repeat_probability,step_t);
@@ -33,8 +36,81 @@ void MainWindow::on_pushButton_clicked()
         ui->textBrowser_3->setText(ex.getMessage());
         return;
     }
+    EvenDistribution generator{a,b};
+    ErlangDistribution processor{k,lambda};
+
+    int result_step = stepModel(generator, processor, count_tasks, repeat_probability, step_t);
+//    qDebug() << generator.generate() << " "<< gen.generate();
+    ui->textBrowser->setText(QString::number(result_step));
 
 }
+int MainWindow::stepModel(EvenDistribution& generator, ErlangDistribution& processor, int countTasks, int repeatProbability, double step)
+{
+    int tasksDone = 0;
+    double timeCurrent = step;
+    double timeGenerated = generator.generate();
+    double timeGeneratedPrev = 0.0;
+    double timeProcessed = 0.0;
+
+    int curQueueLen = 0;
+    int maxQueueLen = 0;
+    bool free = true;
+
+    while(tasksDone < countTasks)
+    {
+
+        //генератор
+        if(timeCurrent > timeGenerated)
+        {
+            curQueueLen += 1;
+            if(curQueueLen > maxQueueLen)
+            {
+                maxQueueLen = curQueueLen;
+            }
+            timeGeneratedPrev = timeGenerated;
+            timeGenerated += generator.generate();
+        }
+        //обработчик
+        if(timeCurrent > timeProcessed)
+        {
+            if(curQueueLen > 0)
+            {
+                bool wasFree = free;
+                if(free)
+                {
+                    free = false;
+                } else {
+                    tasksDone += 1;
+                    curQueueLen -= 1;
+                    if(randf() <= repeatProbability)
+                    {
+                        curQueueLen += 1;
+                    }
+                }
+                if(wasFree)
+                {
+                    timeProcessed = timeGeneratedPrev + processor.generate();
+                } else {
+                    timeProcessed += processor.generate();
+                }
+            } else {
+                free = true;
+            }
+        }
+        timeCurrent += step;
+    }
+    return maxQueueLen;
+}
+
+int MainWindow::randf()
+{
+    int min = 1;
+    int max = 100;
+    return min + rand() % (max - min + 1);
+}
+
+
+
 void MainWindow::getDataFromScreen(int&a, int&b, int&k, double&lambda, int&count_tasks, int&repeat_probability, double&step_t)
 {
     ui->textBrowser_3->clear();
