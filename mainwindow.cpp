@@ -109,7 +109,7 @@ int MainWindow::stepModel(EvenDistribution& generator, ErlangDistribution& proce
 
 int MainWindow::randf()
 {
-    int min = 1;
+    int min = 1; // возможно ноль + шаг времени можно увеличить до 1...10 при малом диапазоне a b
     int max = 100;
     return min + rand() % (max - min + 1);
 }
